@@ -415,7 +415,7 @@ h2 .n{{color:var(--moss);font-size:13px;margin-left:6px}}
   <div class="stat"><b>{st['by_model']}</b><span>needed the model</span></div>
   <div class="stat"><b>{st['model_skipped_pct']}%</b><span>model work avoided</span></div>
   <div class="stat"><b>{plan['seconds']}s</b><span>planning time</span></div>
-  <div class="stat"><b>~{st.get('manual_minutes', 0)} min</b><span>manual sorting avoided</span></div>
+  <div class="stat"><b>{('~' + str(st['manual_minutes'])) if st.get('manual_minutes') else '&lt;1'} min</b><span>manual sorting avoided</span></div>
 </div>
 {''.join(rows)}
 </body></html>"""
@@ -516,7 +516,9 @@ def cmd_plan(args):
     print(f"  {st['by_rule']} handled by rules, {st['by_model']} needed the model "
           f"({st['model_skipped_pct']}% avoided)")
     print(f"  {plan['model_calls']} model call(s), {plan['seconds']}s")
-    print(f"  ~{st['manual_minutes']} min of manual sorting avoided")
+    mins = st["manual_minutes"]
+    print(f"  ~{mins} min of manual sorting avoided" if mins
+          else "  under a minute of manual sorting avoided")
     print(f"\n  plan:   {out}")
     print(f"  report: {report}   ← open this to review")
     print(f"\nApply with:\n  python3 tidysloth.py apply {out}")
