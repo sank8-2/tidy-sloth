@@ -209,6 +209,18 @@ def _compact(s: str) -> str:
     return re.sub(r"[^a-z0-9]", "", s.lower())
 
 
+def provenance_ok(proposed: str, original: str) -> bool:
+    """A rename may reorganise a file's own words. It may never import another's.
+
+    A 1B model batching filenames will happily attach one row's name to another
+    row's file, so every proposal has to be traceable back to its source name.
+    """
+    if _tokens(proposed) & _tokens(original):
+        return True
+    a, b = _compact(proposed), _compact(original)
+    return bool(a and b and (a in b or b in a))
+
+
 def safe_model_name(name: str, src_stem: str) -> str:
     """Accept a model-proposed filename only when it cannot be wrong.
 
@@ -234,11 +246,7 @@ def safe_model_name(name: str, src_stem: str) -> str:
     if not has_semantic_words(src_stem) and n.lower() != clean_stem(src_stem).lower():
         return ""
     # Provenance: the proposal must reuse the original's own words.
-    same = bool(_tokens(n) & _tokens(src_stem))
-    if not same:
-        a, b = _compact(n), _compact(src_stem)
-        same = bool(a and b and (a in b or b in a))
-    if not same:
+    if not provenance_ok(n, src_stem):
         return ""
     # Reject a name that is just another file's full name with an extension.
     if re.search(r"\.(" + "|".join(KNOWN_EXT) + r")$", n, re.I):
